@@ -1,0 +1,87 @@
+import telebot
+from telebot import types
+import random
+
+# التوكن بتاعك
+TOKEN = '8696435246:AAEouqyX8ri_p52vrXenxF6thVTQeAlJ4Nc'
+bot = telebot.TeleBot(TOKEN)
+
+# --- 1. قسم تالته إعدادي (ربط الملفات اللي بعتها) ---
+study_links = {
+    "عربي و نحو 📚": "أنت رفعت ملفات جبارة للنحو والصرف (قاسم) وعربي 3ع. الخلاصة: ركز على التوابع (البدل والعطف) والمنادى لأنهم أساس الامتحان!",
+    "أصول دين 🕋": "معاك دليل الحديث والسيرة. ركز على الأحاديث من 13 لـ 20، والسيرة لحد عام الحزن.. دول في قلب الامتحان.",
+    "ثقافة إسلامية ☪️": "ملف الثقافة اللي معاك مهم جداً، ركز على موضوع سماحة الإسلام ومعاملة الآخرين.",
+    "كود HTML 💻": "بما إنك معاك ملخص HTML، فدي ميزة إضافية للبوت للمبرمجين اللي زيك!",
+    "رياضيات وعلوم 🧪": "مبعتش ليهم ملفات، بس نصيحتي: الرياضة حل محافظات، والعلوم ركز على التفاعلات الكيميائية."
+}
+
+# --- 2. قسم الأذكار ---
+azkar_list = [
+    "أصبحنا وأصبح الملك لله والحمد لله ☀️",
+    "اللهم بك أمسينا وبك أصبحنا 🌙",
+    "سبحان الله وبحمده (100 مرة) 🌸",
+    "أستغفر الله العظيم وأتوب إليه 🤲"
+]
+
+# --- 3. قسم الألعاب ---
+games = ["خمن الرقم من 1 لـ 10", "لعبة الصراحة", "أسئلة ذكاء"]
+
+# --- المنيو الرئيسي ---
+def main_menu():
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    markup.add('🎓 ملفات 3 إعدادي', '🕌 أذكار المسلم')
+    markup.add('🎮 ألعاب مسلية', '💡 نصيحة عمك Goo')
+    markup.add('🤖 المبرمج يوسف')
+    return markup
+
+@bot.message_handler(commands=['start'])
+def welcome(message):
+    user_name = message.from_user.first_name
+    msg = (f"🔥 **أهلاً بك في بوت Goo v8.0** 🔥\n\n"
+           f"يا {user_name}، البوت ده معمول عشانك مخصوص.\n"
+           f"👑 **برعاية: عمك Goo المصري**\n"
+           f"👨‍💻 **المبرمج:** يوسف إسلام\n"
+           f"📞 **تواصل:** 01144864084\n\n"
+           f"كل اللي تحتاجه (دراسة، دين، لعب) موجود تحت 👇")
+    bot.send_message(message.chat.id, msg, reply_markup=main_menu(), parse_mode="Markdown")
+
+@bot.message_handler(func=lambda m: True)
+def handle_all(message):
+    t = message.text
+    
+    if t == '🎓 ملفات 3 إعدادي':
+        markup = types.InlineKeyboardMarkup(row_width=1)
+        for key in study_links.keys():
+            markup.add(types.InlineKeyboardButton(key, callback_data=f"study_{key}"))
+        bot.send_message(message.chat.id, "دي خلاصة الملفات اللي رفعتها يا بطل:", reply_markup=markup)
+
+    elif t == '🕌 أذكار المسلم':
+        bot.reply_to(message, f"🌸 **ذكر الآن:**\n\n{random.choice(azkar_list)}")
+
+    elif t == '🎮 ألعاب مسلية':
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("خمن الرقم 🎲", callback_data="game_guess"),
+                   types.InlineKeyboardButton("سؤال ذكاء 🧠", callback_data="game_logic"))
+        bot.send_message(message.chat.id, "اختار اللعبة:", reply_markup=markup)
+
+    elif t == '💡 نصيحة عمك Goo':
+        tips = ["ذاكر بتركيز مش بعدد ساعات"، "الموبايل وقت المذاكرة عدوك"، "صلي واطلب التوفيق من الله"]
+        bot.reply_to(message, f"💡 **نصيحة Goo:** {random.choice(tips)}")
+
+    elif t == '🤖 المبرمج يوسف':
+        bot.send_message(message.chat.id, f"👤 **المبرمج:** يوسف إسلام\n📞 **رقم التليفون:** 01144864084\n🇪🇬 **المجال:** مبرمج بوتات محترف")
+
+@bot.callback_query_handler(func=lambda call: True)
+def query_handler(call):
+    if call.data.startswith("study_"):
+        subj = call.data.replace("study_", "")
+        bot.send_message(call.message.chat.id, f"✅ **خلاصة {subj}:**\n\n{study_links[subj]}")
+    
+    elif call.data == "game_guess":
+        bot.send_message(call.message.chat.id, "أنا فكرت في رقم من 1 لـ 10.. ابعت الرقم لو شاطر!")
+        
+    elif call.data == "game_logic":
+        bot.send_message(call.message.chat.id, "سؤال: إيه الحاجة اللي كل ما تزيد تنقص؟ (العمر)")
+
+print("🚀 بوت يوسف إسلام (Goo المصري) انطلق!")
+bot.infinity_polling()
